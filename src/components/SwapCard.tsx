@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useTokenList } from '../hooks/useTokenList'
+import { useTokenPriceConversion } from '../hooks/useTokenPrice'
 import type { Token } from '../types/TokenList'
 import TokenInput from './TokenInput'
 import TokenSelector from './TokenSelector'
@@ -8,7 +9,6 @@ import TokenSelector from './TokenSelector'
 export default function SwapCard() {
   const { findToken } = useTokenList()
   const [fromAmount, setFromAmount] = useState('')
-  const [toAmount, setToAmount] = useState('')
   const [slippage, setSlippage] = useState('0.5')
   const [showSettings, setShowSettings] = useState(false)
   const [showTokenSelector, setShowTokenSelector] = useState(false)
@@ -51,26 +51,36 @@ export default function SwapCard() {
     )
   })
 
+  // Use Moralis for price conversion
+  const { data: priceData, isLoading: isPriceLoading } = useTokenPriceConversion({
+    fromToken,
+    toToken,
+    amount: fromAmount,
+    slippage: parseFloat(slippage) / 100,
+    chainId: 10, // Optimism
+  })
+
   const handleSwapTokens = () => {
     const tempToken = fromToken
     setFromToken(toToken)
     setToToken(tempToken)
 
-    const tempAmount = fromAmount
-    setFromAmount(toAmount)
-    setToAmount(tempAmount)
+    // Keep the fromAmount as is, the conversion will be recalculated automatically
+    // Don't swap the amounts since we want to keep the user's input
   }
 
   const handleFromAmountChange = (value: string) => {
     setFromAmount(value)
-    if (value) {
-      // Simular conversión (1 ETH = 1850 USDC)
-      const converted = (parseFloat(value) * 1850.42).toFixed(2)
-      setToAmount(converted)
-    } else {
-      setToAmount('')
-    }
   }
+
+  // Calculate toAmount based on price data
+  const calculatedToAmount = (() => {
+    if (!fromAmount) return ''
+    if (isPriceLoading) return ''
+    if (!priceData) return ''
+    if (priceData.convertedAmount === '') return ''
+    return parseFloat(priceData.convertedAmount).toFixed(6)
+  })()
 
   const handleTokenSelect = (target: 'from' | 'to') => {
     setTokenSelectorTarget(target)
@@ -190,20 +200,19 @@ export default function SwapCard() {
         <TokenInput
           label="To"
           token={toToken}
-          value={toAmount}
-          onChange={setToAmount}
+          value={calculatedToAmount}
+          onChange={() => {}} // No-op since it's read-only
           onTokenSelect={() => handleTokenSelect('to')}
           readOnly
+          placeholder={isPriceLoading ? 'Loading...' : ''}
         />
 
         {/* Exchange Rate */}
-        {fromAmount && toAmount && (
+        {fromAmount && calculatedToAmount && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-gray-600 dark:text-gray-400">Rate</span>
-              <span className="font-medium text-gray-900 dark:text-white">
-                1 {fromToken.symbol} = 1,850.42 {toToken.symbol}
-              </span>
+            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+              <span>Slippage tolerance</span>
+              <span className="font-medium">{slippage}%</span>
             </div>
           </div>
         )}
@@ -211,14 +220,23 @@ export default function SwapCard() {
         {/* Swap Button */}
         <button
           onClick={handleSwap}
-          disabled={!fromAmount || !toAmount}
+          disabled={!fromAmount || !calculatedToAmount || isPriceLoading}
           className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-200 ${
-            fromAmount && toAmount
+            fromAmount && calculatedToAmount && !isPriceLoading
               ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02]'
               : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
           }`}
         >
-          {fromAmount && toAmount ? 'Swap' : 'Enter an amount'}
+          {isPriceLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Loading prices...
+            </span>
+          ) : fromAmount && calculatedToAmount ? (
+            'Swap'
+          ) : (
+            'Enter an amount'
+          )}
         </button>
       </div>
 

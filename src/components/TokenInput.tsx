@@ -1,6 +1,7 @@
 import { useAccount } from 'wagmi'
 
 import { useTokenBalance } from '../hooks/useTokenBalance'
+import { useTokenPrice } from '../hooks/useTokenPrice'
 import type { Token } from '../types/TokenList'
 
 interface TokenInputProps {
@@ -10,6 +11,7 @@ interface TokenInputProps {
   onChange: (value: string) => void
   onTokenSelect: () => void
   readOnly?: boolean
+  placeholder?: string
 }
 
 export default function TokenInput({
@@ -19,9 +21,11 @@ export default function TokenInput({
   onChange,
   onTokenSelect,
   readOnly = false,
+  placeholder,
 }: TokenInputProps) {
   const { address } = useAccount()
   const { balance, isLoading } = useTokenBalance({ token, address })
+  const { data: tokenPrice, isLoading: isPriceLoading } = useTokenPrice({ token, chainId: 10 })
 
   const hasInsufficientBalance = address && value && parseFloat(value) > parseFloat(balance)
   return (
@@ -50,7 +54,7 @@ export default function TokenInput({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="0.0"
+          placeholder={placeholder || '0.0'}
           readOnly={readOnly}
           className="flex-1 bg-transparent text-3xl font-semibold text-gray-900 dark:text-white outline-none placeholder:text-gray-300 dark:placeholder:text-gray-600 min-w-0"
         />
@@ -94,7 +98,16 @@ export default function TokenInput({
 
       {value && (
         <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          ≈ ${(parseFloat(value) * 1850.42).toFixed(2)}
+          {isPriceLoading ? (
+            <span className="flex items-center gap-1">
+              <div className="w-3 h-3 border border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+              Loading price...
+            </span>
+          ) : tokenPrice?.usdPrice ? (
+            `≈ $${(parseFloat(value) * tokenPrice.usdPrice).toFixed(2)}`
+          ) : (
+            'Price unavailable'
+          )}
         </div>
       )}
 
