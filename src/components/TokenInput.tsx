@@ -12,6 +12,7 @@ interface TokenInputProps {
   onTokenSelect: () => void
   readOnly?: boolean
   placeholder?: string
+  showBalanceCheck?: boolean
 }
 
 export default function TokenInput({
@@ -22,12 +23,14 @@ export default function TokenInput({
   onTokenSelect,
   readOnly = false,
   placeholder,
+  showBalanceCheck = true,
 }: TokenInputProps) {
   const { address } = useAccount()
   const { balance, isLoading } = useTokenBalance({ token, address })
   const { data: tokenPrice, isLoading: isPriceLoading } = useTokenPrice({ token, chainId: 10 })
 
-  const hasInsufficientBalance = address && value && parseFloat(value) > parseFloat(balance)
+  const hasInsufficientBalance =
+    showBalanceCheck && address && value && parseFloat(value) > parseFloat(balance)
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4">
       <div className="flex items-center justify-between mb-2">
@@ -37,7 +40,7 @@ export default function TokenInput({
             <span className="text-sm text-gray-500 dark:text-gray-400">
               Balance: {isLoading ? '...' : balance}
             </span>
-            {!isLoading && parseFloat(balance) > 0 && (
+            {!readOnly && !isLoading && parseFloat(balance) > 0 && (
               <button
                 onClick={() => onChange(balance)}
                 className="text-xs px-2 py-1 bg-pink-100 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 rounded-md hover:bg-pink-200 dark:hover:bg-pink-900/30 transition-colors"

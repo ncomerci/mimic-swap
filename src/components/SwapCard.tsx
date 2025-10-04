@@ -205,6 +205,7 @@ export default function SwapCard() {
           onTokenSelect={() => handleTokenSelect('to')}
           readOnly
           placeholder={isPriceLoading ? 'Loading...' : ''}
+          showBalanceCheck={false}
         />
 
         {/* Exchange Rate */}
