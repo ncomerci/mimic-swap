@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
+import prettierPlugin from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
 import tseslint from 'typescript-eslint'
 
@@ -19,6 +20,7 @@ export default [
     files: ['**/*.{ts,tsx}'],
     plugins: {
       'simple-import-sort': simpleImportSort,
+      prettier: prettierPlugin,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -28,6 +30,8 @@ export default [
       // Import sorting rules
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      // Prettier rules
+      'prettier/prettier': 'error',
     },
     settings: {
       react: {
