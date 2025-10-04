@@ -1,3 +1,6 @@
+import { useAccount } from 'wagmi'
+
+import { useTokenBalance } from '../hooks/useTokenBalance'
 import type { Token } from '../types/TokenList'
 
 interface TokenInputProps {
@@ -7,7 +10,6 @@ interface TokenInputProps {
   onChange: (value: string) => void
   onTokenSelect: () => void
   readOnly?: boolean
-  balance?: string
 }
 
 export default function TokenInput({
@@ -17,14 +19,29 @@ export default function TokenInput({
   onChange,
   onTokenSelect,
   readOnly = false,
-  balance,
 }: TokenInputProps) {
+  const { address } = useAccount()
+  const { balance, isLoading } = useTokenBalance({ token, address })
+
+  const hasInsufficientBalance = address && value && parseFloat(value) > parseFloat(balance)
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</span>
-        {balance && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">Balance: {balance}</span>
+        {address && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Balance: {isLoading ? '...' : balance}
+            </span>
+            {!isLoading && parseFloat(balance) > 0 && (
+              <button
+                onClick={() => onChange(balance)}
+                className="text-xs px-2 py-1 bg-pink-100 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 rounded-md hover:bg-pink-200 dark:hover:bg-pink-900/30 transition-colors"
+              >
+                Max
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -79,6 +96,10 @@ export default function TokenInput({
         <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           ≈ ${(parseFloat(value) * 1850.42).toFixed(2)}
         </div>
+      )}
+
+      {hasInsufficientBalance && (
+        <div className="mt-2 text-sm text-red-500 dark:text-red-400">Insufficient balance</div>
       )}
     </div>
   )

@@ -162,7 +162,6 @@ export default function SwapCard() {
           value={fromAmount}
           onChange={handleFromAmountChange}
           onTokenSelect={() => handleTokenSelect('from')}
-          balance="2.5491"
         />
 
         {/* Swap Button */}
@@ -195,7 +194,6 @@ export default function SwapCard() {
           onChange={setToAmount}
           onTokenSelect={() => handleTokenSelect('to')}
           readOnly
-          balance="1,250.00"
         />
 
         {/* Exchange Rate */}
