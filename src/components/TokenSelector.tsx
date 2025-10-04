@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { useChainId, useSwitchChain } from 'wagmi'
 
-import { useChain } from '../hooks/useChain'
 import { useTokenList } from '../hooks/useTokenList'
 import type { Token } from '../types/TokenList'
 
@@ -18,12 +18,15 @@ export default function TokenSelector({
   selectedToken,
 }: TokenSelectorProps) {
   const { getTokensByChain, loading, error } = useTokenList()
-  const { selectedChain } = useChain()
+  const chainId = useChainId()
+  const { chains } = useSwitchChain()
   const [searchQuery, setSearchQuery] = useState('')
+
+  const currentChain = chains.find((chain) => chain.id === chainId)
 
   if (!isOpen) return null
 
-  const tokens = selectedChain ? getTokensByChain(selectedChain.chainId) : []
+  const tokens = getTokensByChain(chainId)
 
   const filteredTokens = tokens.filter(
     (token) =>
@@ -99,17 +102,13 @@ export default function TokenSelector({
             <div className="p-8 text-center">
               <p className="text-red-500">Error loading tokens: {error}</p>
             </div>
-          ) : !selectedChain ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-500 dark:text-gray-400">Please select a chain first</p>
-            </div>
           ) : (
             /* Token Selection */
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {selectedChain.name}
+                    {currentChain!.name}
                   </span>
                 </div>
               </div>

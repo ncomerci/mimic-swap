@@ -1,8 +1,16 @@
+import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider } from 'wagmi'
+import { optimism } from 'wagmi/chains'
 
 import Header from './components/Header'
 import SwapCard from './components/SwapCard'
-import { ChainProvider } from './contexts/ChainContext'
+
+const config = getDefaultConfig({
+  appName: 'Mimic Swap',
+  projectId: 'edb6642f9e80d1dcb1051f7f0191250a',
+  chains: [optimism],
+})
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,8 +23,8 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ChainProvider>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
         <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
           <Header />
 
@@ -30,8 +38,8 @@ function App() {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-300/20 dark:bg-purple-500/10 rounded-full blur-3xl" />
           </div>
         </div>
-      </ChainProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   )
 }
 

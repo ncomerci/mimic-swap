@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-
-import { useChain } from '../hooks/useChain'
-import type { Chain } from '../types/Chain'
+import { useChainId, useSwitchChain } from 'wagmi'
 
 const LOGO_MAP: Record<number, string> = {
   10: '/op-logo.svg',
 }
 
 export default function ChainSelector() {
-  const { selectedChain, setSelectedChain, chains, isLoading } = useChain()
+  const chainId = useChainId()
+  const { chains, switchChain, isPending } = useSwitchChain()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -25,12 +24,14 @@ export default function ChainSelector() {
     }
   }, [])
 
-  const handleChainSelect = (chain: Chain) => {
-    setSelectedChain(chain)
+  const handleChainSelect = (targetChainId: number) => {
+    switchChain({ chainId: targetChainId })
     setIsOpen(false)
   }
 
-  if (isLoading) {
+  const currentChain = chains.find((chain) => chain.id === chainId)
+
+  if (isPending) {
     return (
       <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-xl">
         <div className="w-6 h-6 border-2 border-gray-300 border-t-pink-500 rounded-full animate-spin"></div>
@@ -44,25 +45,25 @@ export default function ChainSelector() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
       >
-        {selectedChain && (
+        {currentChain && (
           <>
             <div className="w-6 h-6 flex items-center justify-center">
-              {LOGO_MAP[selectedChain.chainId] ? (
+              {LOGO_MAP[currentChain.id] ? (
                 <img
-                  src={LOGO_MAP[selectedChain.chainId]}
-                  alt={selectedChain.name}
+                  src={LOGO_MAP[currentChain.id]}
+                  alt={currentChain.name}
                   className="w-6 h-6 rounded-full"
                 />
               ) : (
                 <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">
-                    {selectedChain.shortName.toUpperCase().slice(0, 2)}
+                    {currentChain.name.toUpperCase().slice(0, 2)}
                   </span>
                 </div>
               )}
             </div>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {selectedChain.name}
+              {currentChain.name}
             </span>
           </>
         )}
@@ -86,25 +87,25 @@ export default function ChainSelector() {
             </div>
             {chains.map((chain) => (
               <button
-                key={chain.chainId}
-                onClick={() => handleChainSelect(chain)}
+                key={chain.id}
+                onClick={() => handleChainSelect(chain.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                  selectedChain?.chainId === chain.chainId
+                  chainId === chain.id
                     ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
                 }`}
               >
                 <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                  {LOGO_MAP[chain.chainId] ? (
+                  {LOGO_MAP[chain.id] ? (
                     <img
-                      src={LOGO_MAP[chain.chainId]}
+                      src={LOGO_MAP[chain.id]}
                       alt={chain.name}
                       className="w-8 h-8 rounded-full"
                     />
                   ) : (
                     <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-bold">
-                        {chain.shortName.toUpperCase().slice(0, 2)}
+                        {chain.name.toUpperCase().slice(0, 2)}
                       </span>
                     </div>
                   )}
@@ -112,7 +113,7 @@ export default function ChainSelector() {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{chain.name}</div>
                 </div>
-                {selectedChain?.chainId === chain.chainId && (
+                {chainId === chain.id && (
                   <svg className="w-4 h-4 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
