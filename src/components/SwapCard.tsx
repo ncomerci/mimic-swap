@@ -271,7 +271,7 @@ export default function SwapCard() {
             !isPriceLoading &&
             !hasInsufficientBalance &&
             !isTimelineLoading
-              ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02]'
+              ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02] cursor-pointer'
               : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
           }`}
         >

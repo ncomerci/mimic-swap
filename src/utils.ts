@@ -24,3 +24,23 @@ export function generateUtcCron(
     cron,
   }
 }
+
+/**
+ * Genera una versión semántica (semver) aleatoria con solo los tres números básicos
+ *
+ * @param majorRange - Rango para el número mayor (por defecto 0-10)
+ * @param minorRange - Rango para el número menor (por defecto 0-99)
+ * @param patchRange - Rango para el número de parche (por defecto 0-99)
+ * @returns Una versión semántica aleatoria como string (ej: "3.45.12")
+ */
+export function generateRandomSemver(
+  majorRange: [number, number] = [0, 10],
+  minorRange: [number, number] = [0, 99],
+  patchRange: [number, number] = [0, 99]
+): string {
+  const major = Math.floor(Math.random() * (majorRange[1] - majorRange[0] + 1)) + majorRange[0]
+  const minor = Math.floor(Math.random() * (minorRange[1] - minorRange[0] + 1)) + minorRange[0]
+  const patch = Math.floor(Math.random() * (patchRange[1] - patchRange[0] + 1)) + patchRange[0]
+
+  return `${major}.${minor}.${patch}`
+}

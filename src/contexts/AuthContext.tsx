@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { createContext, useEffect, useRef, useState } from 'react'
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi'
 
-import { authenticate, getApiKey, getNonce } from '../auth'
 import useAccessToken from '../hooks/useAccessToken'
 import useApiKey from '../hooks/useApiKey'
+import { authenticate, getApiKey, getNonce } from '../lib/auth'
 
 interface AuthProviderProps {
   children: ReactNode
