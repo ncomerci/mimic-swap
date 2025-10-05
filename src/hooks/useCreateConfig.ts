@@ -4,7 +4,7 @@ import { useAccount, useConfig } from 'wagmi'
 
 import sdk from '../lib/protocol'
 import { WagmiSigner } from '../lib/signer'
-import { generateRandomSemver, generateUtcCron } from '../utils'
+import { generateRandomSemver } from '../utils'
 import { useManifest } from './useManifest'
 
 const TASK_CID = 'QmZom6ZKhE3GS1XfUF8MvhHqobrX14WUGSFUNru6vFoPEQ'
@@ -19,27 +19,53 @@ interface TaskInputs {
   slippageBps: number
 }
 
+interface ExecutionOptions {
+  schedule: string
+  endDate: number
+}
+
 interface Props {
   onSuccess?: (config: Config) => void
   onError?: (error: ApiError) => void
 }
 
-export function useCreateConfig({ onSuccess, onError }: Props = {}): UseMutationResult<
-  unknown,
-  ApiError,
-  TaskInputs
-> {
+interface UseCreateConfigReturn {
+  mutate: UseMutationResult<
+    unknown,
+    ApiError,
+    { inputs: TaskInputs; options: ExecutionOptions }
+  >['mutate']
+  isPending: boolean
+  isSuccess: boolean
+  error: ApiError | null
+  reset: () => void
+  isManifestLoading: boolean
+  manifestError: Error | null
+}
+
+export function useCreateConfig({ onSuccess, onError }: Props = {}): UseCreateConfigReturn {
   const { address } = useAccount()
   const wagmiConfig = useConfig()
   if (!address) {
     throw new Error('Wallet not connected')
   }
 
-  const { data: manifest } = useManifest(TASK_CID)
+  const {
+    data: manifest,
+    isLoading: isManifestLoading,
+    error: manifestError,
+  } = useManifest(TASK_CID)
 
-  return useMutation({
-    mutationFn: async (inputs: TaskInputs) => {
-      const { targetUtc, cron } = generateUtcCron()
+  const mutation = useMutation({
+    mutationFn: async ({ inputs, options }: { inputs: TaskInputs; options: ExecutionOptions }) => {
+      // Validate manifest is available before proceeding
+      if (!manifest) {
+        throw new Error('Manifest not loaded yet. Please wait and try again.')
+      }
+
+      if (manifestError) {
+        throw new Error(`Failed to load manifest: ${manifestError.message}`)
+      }
 
       return await sdk.configs.signAndCreate(
         {
@@ -47,9 +73,9 @@ export function useCreateConfig({ onSuccess, onError }: Props = {}): UseMutation
           description: 'Swap tokens',
           trigger: {
             type: TriggerType.Cron,
-            schedule: cron,
+            schedule: options.schedule,
             delta: `5m`,
-            endDate: targetUtc + 90 * 1000,
+            endDate: options.endDate,
           },
           input: {
             tokenIn: inputs.tokenIn,
@@ -61,7 +87,7 @@ export function useCreateConfig({ onSuccess, onError }: Props = {}): UseMutation
             slippageBps: inputs.slippageBps,
           },
           version: generateRandomSemver(),
-          manifest: manifest!,
+          manifest: manifest,
           signer: address,
           executionFeeLimit: '0',
           minValidations: DEFAULT_MIN_VALIDATIONS,
@@ -72,4 +98,14 @@ export function useCreateConfig({ onSuccess, onError }: Props = {}): UseMutation
     onSuccess,
     onError,
   })
+
+  return {
+    mutate: mutation.mutate,
+    isPending: mutation.isPending,
+    isSuccess: mutation.isSuccess,
+    error: mutation.error,
+    reset: mutation.reset,
+    isManifestLoading,
+    manifestError,
+  }
 }

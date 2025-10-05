@@ -5,7 +5,7 @@ import { useTokenBalance } from '../hooks/useTokenBalance'
 import { useTokenList } from '../hooks/useTokenList'
 import { useTokenPriceConversion } from '../hooks/useTokenPrice'
 import type { Token } from '../types/TokenList'
-import SwapTimeline from './SwapTimeline'
+import { SwapTimeline } from './timeline'
 import TokenInput from './TokenInput'
 import TokenSelector from './TokenSelector'
 
@@ -299,6 +299,9 @@ export default function SwapCard() {
       <SwapTimeline
         fromToken={fromToken}
         fromAmount={fromAmount}
+        toToken={toToken}
+        toAmount={calculatedToAmount}
+        slippage={slippage}
         userAddress={address}
         isVisible={showSwapTimeline}
         onLoadingStateChange={setIsTimelineLoading}
