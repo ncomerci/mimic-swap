@@ -10,7 +10,7 @@ import TokenInput from './TokenInput'
 import TokenSelector from './TokenSelector'
 
 export default function SwapCard() {
-  const { address } = useAccount()
+  const { address, isConnected } = useAccount()
   const { findToken } = useTokenList()
   const [fromAmount, setFromAmount] = useState('')
   const [slippage, setSlippage] = useState('0.5')
@@ -257,6 +257,7 @@ export default function SwapCard() {
         <button
           onClick={handleSwap}
           disabled={
+            !isConnected ||
             !fromAmount ||
             !calculatedToAmount ||
             isPriceLoading ||
@@ -264,6 +265,7 @@ export default function SwapCard() {
             isTimelineLoading
           }
           className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-200 ${
+            isConnected &&
             fromAmount &&
             calculatedToAmount &&
             !isPriceLoading &&
@@ -273,7 +275,9 @@ export default function SwapCard() {
               : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
           }`}
         >
-          {isPriceLoading ? (
+          {!isConnected ? (
+            'Connect Wallet'
+          ) : isPriceLoading ? (
             <span className="flex items-center justify-center gap-2">
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               Loading prices...
