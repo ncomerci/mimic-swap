@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useAccount } from 'wagmi'
 
+import { useTokenBalance } from '../hooks/useTokenBalance'
 import { useTokenList } from '../hooks/useTokenList'
 import { useTokenPriceConversion } from '../hooks/useTokenPrice'
 import type { Token } from '../types/TokenList'
@@ -7,6 +9,7 @@ import TokenInput from './TokenInput'
 import TokenSelector from './TokenSelector'
 
 export default function SwapCard() {
+  const { address } = useAccount()
   const { findToken } = useTokenList()
   const [fromAmount, setFromAmount] = useState('')
   const [slippage, setSlippage] = useState('0.5')
@@ -51,6 +54,12 @@ export default function SwapCard() {
     )
   })
 
+  // Get balance for the from token
+  const { balance: fromTokenBalance } = useTokenBalance({
+    token: fromToken,
+    address,
+  })
+
   // Use Moralis for price conversion
   const { data: priceData, isLoading: isPriceLoading } = useTokenPriceConversion({
     fromToken,
@@ -81,6 +90,10 @@ export default function SwapCard() {
     if (priceData.convertedAmount === '') return ''
     return parseFloat(priceData.convertedAmount).toFixed(6)
   })()
+
+  // Check if there's insufficient balance
+  const hasInsufficientBalance =
+    address && fromAmount && parseFloat(fromAmount) > parseFloat(fromTokenBalance)
 
   const handleTokenSelect = (target: 'from' | 'to') => {
     setTokenSelectorTarget(target)
@@ -221,9 +234,11 @@ export default function SwapCard() {
         {/* Swap Button */}
         <button
           onClick={handleSwap}
-          disabled={!fromAmount || !calculatedToAmount || isPriceLoading}
+          disabled={
+            !fromAmount || !calculatedToAmount || isPriceLoading || !!hasInsufficientBalance
+          }
           className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-200 ${
-            fromAmount && calculatedToAmount && !isPriceLoading
+            fromAmount && calculatedToAmount && !isPriceLoading && !hasInsufficientBalance
               ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02]'
               : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
           }`}
