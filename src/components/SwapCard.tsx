@@ -5,6 +5,7 @@ import { useTokenBalance } from '../hooks/useTokenBalance'
 import { useTokenList } from '../hooks/useTokenList'
 import { useTokenPriceConversion } from '../hooks/useTokenPrice'
 import type { Token } from '../types/TokenList'
+import SwapTimeline from './SwapTimeline'
 import TokenInput from './TokenInput'
 import TokenSelector from './TokenSelector'
 
@@ -16,6 +17,9 @@ export default function SwapCard() {
   const [showSettings, setShowSettings] = useState(false)
   const [showTokenSelector, setShowTokenSelector] = useState(false)
   const [tokenSelectorTarget, setTokenSelectorTarget] = useState<'from' | 'to'>('from')
+  const [showSwapTimeline, setShowSwapTimeline] = useState(false)
+  const [isTimelineLoading, setIsTimelineLoading] = useState(false)
+  const [timelineResetKey, setTimelineResetKey] = useState(0)
 
   // Default tokens - ETH on Optimism (chainId 10) and USDC on Optimism
   const [fromToken, setFromToken] = useState<Token>(() => {
@@ -73,6 +77,8 @@ export default function SwapCard() {
     const tempToken = fromToken
     setFromToken(toToken)
     setToToken(tempToken)
+    setShowSwapTimeline(false) // Hide timeline when tokens are swapped
+    setTimelineResetKey((prev) => prev + 1) // Reset timeline state
 
     // Keep the fromAmount as is, the conversion will be recalculated automatically
     // Don't swap the amounts since we want to keep the user's input
@@ -80,6 +86,8 @@ export default function SwapCard() {
 
   const handleFromAmountChange = (value: string) => {
     setFromAmount(value)
+    setShowSwapTimeline(false) // Hide timeline when amount changes
+    setTimelineResetKey((prev) => prev + 1) // Reset timeline state
   }
 
   // Calculate toAmount based on price data
@@ -107,10 +115,24 @@ export default function SwapCard() {
       setToToken(token)
     }
     setShowTokenSelector(false)
+    setShowSwapTimeline(false) // Hide timeline when token is changed
+    setTimelineResetKey((prev) => prev + 1) // Reset timeline state
+  }
+
+  const handleSlippageChange = (value: string) => {
+    setSlippage(value)
+    setShowSwapTimeline(false) // Hide timeline when slippage changes
+    setTimelineResetKey((prev) => prev + 1) // Reset timeline state
+  }
+
+  const handleSlippageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlippage(e.target.value)
+    setShowSwapTimeline(false) // Hide timeline when slippage changes
+    setTimelineResetKey((prev) => prev + 1) // Reset timeline state
   }
 
   const handleSwap = () => {
-    alert('Swap functionality would be implemented here!')
+    setShowSwapTimeline(true)
   }
 
   return (
@@ -157,7 +179,7 @@ export default function SwapCard() {
                 {['0.1', '0.5', '1.0'].map((value) => (
                   <button
                     key={value}
-                    onClick={() => setSlippage(value)}
+                    onClick={() => handleSlippageChange(value)}
                     className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                       slippage === value
                         ? 'bg-pink-500 text-white'
@@ -170,7 +192,7 @@ export default function SwapCard() {
                 <input
                   type="text"
                   value={slippage}
-                  onChange={(e) => setSlippage(e.target.value)}
+                  onChange={handleSlippageInputChange}
                   className="w-16 px-2 py-1 rounded-lg text-sm font-medium bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-center"
                 />
               </div>
@@ -235,10 +257,18 @@ export default function SwapCard() {
         <button
           onClick={handleSwap}
           disabled={
-            !fromAmount || !calculatedToAmount || isPriceLoading || !!hasInsufficientBalance
+            !fromAmount ||
+            !calculatedToAmount ||
+            isPriceLoading ||
+            !!hasInsufficientBalance ||
+            isTimelineLoading
           }
           className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-200 ${
-            fromAmount && calculatedToAmount && !isPriceLoading && !hasInsufficientBalance
+            fromAmount &&
+            calculatedToAmount &&
+            !isPriceLoading &&
+            !hasInsufficientBalance &&
+            !isTimelineLoading
               ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02]'
               : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
           }`}
@@ -248,6 +278,11 @@ export default function SwapCard() {
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               Loading prices...
             </span>
+          ) : isTimelineLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Processing...
+            </span>
           ) : fromAmount && calculatedToAmount ? (
             'Swap'
           ) : (
@@ -255,6 +290,16 @@ export default function SwapCard() {
           )}
         </button>
       </div>
+
+      {/* Swap Timeline */}
+      <SwapTimeline
+        fromToken={fromToken}
+        fromAmount={fromAmount}
+        userAddress={address}
+        isVisible={showSwapTimeline}
+        onLoadingStateChange={setIsTimelineLoading}
+        resetKey={timelineResetKey}
+      />
 
       {/* Token Selector Modal */}
       <TokenSelector
