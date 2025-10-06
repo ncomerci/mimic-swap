@@ -1,0 +1,11 @@
+version: 1.0.1
+name: Swap task
+description: a task that swaps tokens
+inputs:
+  - amountIn: string
+  - sourceChain: uint32
+  - tokenIn: address
+  - destinationChain: uint32
+  - tokenOut: address
+  - slippageBps: uint16
+  - destinationAddress: address
