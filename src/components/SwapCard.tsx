@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 
 import { useTokenBalance } from '../hooks/useTokenBalance'
@@ -9,9 +9,19 @@ import { SwapTimeline } from './timeline'
 import TokenInput from './TokenInput'
 import TokenSelector from './TokenSelector'
 
+const NULL_TOKEN: Token = {
+  chainId: 0,
+  address: '',
+  name: '',
+  symbol: '',
+  decimals: 0,
+  logoURI: '',
+  extensions: {},
+}
+
 export default function SwapCard() {
   const { address, isConnected } = useAccount()
-  const { findToken } = useTokenList()
+  const { findToken, loading } = useTokenList()
   const [fromAmount, setFromAmount] = useState('')
   const [slippage, setSlippage] = useState('0.5')
   const [showSettings, setShowSettings] = useState(false)
@@ -21,42 +31,17 @@ export default function SwapCard() {
   const [isTimelineLoading, setIsTimelineLoading] = useState(false)
   const [timelineResetKey, setTimelineResetKey] = useState(0)
 
-  // Default tokens - ETH on Optimism (chainId 10) and USDC on Optimism
-  const [fromToken, setFromToken] = useState<Token>(() => {
-    const ethToken =
-      findToken(10, '0x4200000000000000000000000000000000000006') ||
-      findToken(1, '0x0000000000000000000000000000000000000000')
-    return (
-      ethToken ||
-      ({
-        chainId: 10,
-        address: '0x4200000000000000000000000000000000000006',
-        name: 'Ethereum',
-        symbol: 'ETH',
-        decimals: 18,
-        logoURI: 'https://ethereum-optimism.github.io/data/ETH/logo.svg',
-        extensions: {},
-      } as Token)
-    )
-  })
+  const [fromToken, setFromToken] = useState<Token>(NULL_TOKEN)
 
-  const [toToken, setToToken] = useState<Token>(() => {
-    const usdcToken =
-      findToken(10, '0x7F5c764cBc14f9669B88837ca1490cCa17c31607') ||
-      findToken(1, '0xA0b86a33E6441e88C5F2712C3E9b74Ec6F3f2a7D')
-    return (
-      usdcToken ||
-      ({
-        chainId: 10,
-        address: '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
-        name: 'USD Coin',
-        symbol: 'USDC',
-        decimals: 6,
-        logoURI: 'https://ethereum-optimism.github.io/data/BridgedUSDC/logo.png',
-        extensions: {},
-      } as Token)
-    )
-  })
+  const [toToken, setToToken] = useState<Token>(NULL_TOKEN)
+
+  useEffect(() => {
+    if (!loading) {
+      setFromToken(findToken(10, '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85') || NULL_TOKEN)
+      setToToken(findToken(10, '0x4200000000000000000000000000000000000006') || NULL_TOKEN)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading])
 
   // Get balance for the from token
   const { balance: fromTokenBalance } = useTokenBalance({
