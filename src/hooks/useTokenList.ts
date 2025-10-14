@@ -3,11 +3,28 @@ import { useQuery } from '@tanstack/react-query'
 import type { Token, TokenList } from '../types/TokenList'
 
 const fetchTokenList = async (): Promise<TokenList> => {
-  const response = await fetch('/optimism.tokenlist.json')
-  if (!response.ok) {
-    throw new Error('Failed to load token list')
+  // Fetch both token lists in parallel
+  const [optimismResponse, arbitrumResponse] = await Promise.all([
+    fetch('/optimism.tokenlist.json'),
+    fetch('/arbitrum.tokenlist.json'),
+  ])
+
+  if (!optimismResponse.ok || !arbitrumResponse.ok) {
+    throw new Error('Failed to load token lists')
   }
-  return response.json()
+
+  const [optimismList, arbitrumList] = await Promise.all([
+    optimismResponse.json(),
+    arbitrumResponse.json(),
+  ])
+
+  // Merge the token lists
+  const mergedTokens = [...optimismList.tokens, ...arbitrumList.tokens]
+
+  return {
+    ...optimismList,
+    tokens: mergedTokens,
+  }
 }
 
 export function useTokenList() {

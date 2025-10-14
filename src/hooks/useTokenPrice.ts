@@ -24,7 +24,7 @@ interface TokenPrice {
 
 interface UseTokenPriceProps {
   token: Token
-  chainId?: number
+  chainId: number
 }
 
 // Moralis API base URL
@@ -40,7 +40,7 @@ const getMoralisApiKey = () => {
   return apiKey
 }
 
-export function useTokenPrice({ token, chainId = 10 }: UseTokenPriceProps) {
+export function useTokenPrice({ token, chainId }: UseTokenPriceProps) {
   return useQuery({
     queryKey: ['tokenPrice', token.address, chainId],
     queryFn: async (): Promise<TokenPrice> => {
@@ -75,13 +75,13 @@ export function useTokenPriceConversion({
   toToken,
   amount,
   slippage = 0,
-  chainId = 10,
+  chainId,
 }: {
   fromToken: Token
   toToken: Token
   amount: string
   slippage?: number
-  chainId?: number
+  chainId: number
 }) {
   return useQuery({
     queryKey: [

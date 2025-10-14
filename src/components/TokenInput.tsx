@@ -1,4 +1,4 @@
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { useTokenPrice } from '../hooks/useTokenPrice'
@@ -26,8 +26,9 @@ export default function TokenInput({
   showBalanceCheck = true,
 }: TokenInputProps) {
   const { address } = useAccount()
+  const chainId = useChainId()
   const { balance, isLoading } = useTokenBalance({ token, address })
-  const { data: tokenPrice, isLoading: isPriceLoading } = useTokenPrice({ token, chainId: 10 })
+  const { data: tokenPrice, isLoading: isPriceLoading } = useTokenPrice({ token, chainId })
 
   const hasInsufficientBalance =
     showBalanceCheck && address && value && parseFloat(value) > parseFloat(balance)

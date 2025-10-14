@@ -7,7 +7,7 @@ import { WagmiSigner } from '../lib/signer'
 import { generateRandomSemver } from '../utils'
 import { useManifest } from './useManifest'
 
-const TASK_CID = 'QmZom6ZKhE3GS1XfUF8MvhHqobrX14WUGSFUNru6vFoPEQ'
+const TASK_CID = 'QmWfYhE39fKMoUCVH85WBWizLbfeVssw4fQYWuiymz4MCg'
 
 interface TaskInputs {
   tokenIn: string

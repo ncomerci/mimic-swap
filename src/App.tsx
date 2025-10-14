@@ -3,7 +3,7 @@ import '@rainbow-me/rainbowkit/styles.css'
 import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
-import { optimism } from 'wagmi/chains'
+import { arbitrum, base, optimism } from 'wagmi/chains'
 
 import Header from './components/Header'
 import SwapCard from './components/SwapCard'
@@ -12,7 +12,7 @@ import { AuthProvider } from './contexts/AuthContext.tsx'
 const config = getDefaultConfig({
   appName: 'Mimic Swap',
   projectId: 'edb6642f9e80d1dcb1051f7f0191250a',
-  chains: [optimism],
+  chains: [optimism, base, arbitrum],
 })
 
 const queryClient = new QueryClient({

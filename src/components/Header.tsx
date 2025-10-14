@@ -1,7 +1,5 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 
-import ChainSelector from './ChainSelector'
-
 export default function Header() {
   return (
     <header className="w-full px-6 py-4 flex items-center justify-between">
@@ -13,7 +11,7 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-3">
-        <ChainSelector />
+        {/* <ChainSelector /> */}
         <ConnectButton />
       </div>
     </header>

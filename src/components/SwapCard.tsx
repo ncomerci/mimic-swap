@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { useTokenList } from '../hooks/useTokenList'
@@ -21,6 +21,7 @@ const NULL_TOKEN: Token = {
 
 export default function SwapCard() {
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
   const { findToken, loading } = useTokenList()
   const [fromAmount, setFromAmount] = useState('')
   const [slippage, setSlippage] = useState('0.5')
@@ -36,12 +37,34 @@ export default function SwapCard() {
   const [toToken, setToToken] = useState<Token>(NULL_TOKEN)
 
   useEffect(() => {
-    if (!loading) {
-      setFromToken(findToken(10, '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85') || NULL_TOKEN)
-      setToToken(findToken(10, '0x4200000000000000000000000000000000000006') || NULL_TOKEN)
+    if (!loading && chainId) {
+      // Default token addresses for each chain
+      const defaultTokens = {
+        10: {
+          // Optimism
+          usdc: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
+          weth: '0x4200000000000000000000000000000000000006',
+        },
+        8453: {
+          // Base
+          usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          weth: '0x4200000000000000000000000000000000000006',
+        },
+        42161: {
+          // Arbitrum
+          usdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+          weth: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+        },
+      }
+
+      const chainTokens = defaultTokens[chainId as keyof typeof defaultTokens]
+      if (chainTokens) {
+        setFromToken(findToken(chainId, chainTokens.usdc) || NULL_TOKEN)
+        setToToken(findToken(chainId, chainTokens.weth) || NULL_TOKEN)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading])
+  }, [loading, chainId])
 
   // Get balance for the from token
   const { balance: fromTokenBalance } = useTokenBalance({
@@ -55,7 +78,7 @@ export default function SwapCard() {
     toToken,
     amount: fromAmount,
     slippage: parseFloat(slippage) / 100,
-    chainId: 10, // Optimism
+    chainId,
   })
 
   const handleSwapTokens = () => {
